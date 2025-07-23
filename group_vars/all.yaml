@@ -1,0 +1,13 @@
+redis:
+  host: 127.0.0.1
+  port: 6379
+
+postgres:
+  host: 127.0.0.1
+  port: 5432
+  user: tyk
+  password: 123456
+  database: tyk_analytics
+
+gateway:
+  secret: 352d20ee67be67f6340b4c0605b044b7

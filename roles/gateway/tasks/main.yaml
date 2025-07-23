@@ -1,0 +1,49 @@
+- name: Ensure /etc/apt/keyrings directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Remove old Tyk Gateway repo and key (if any)
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/sources.list.d/tyk_tyk-gateway.list
+    - /etc/apt/sources.list.d/tyk-gateway.list
+    - /etc/apt/keyrings/tyk-gateway.gpg
+
+- name: Download Tyk Gateway GPG key and convert to keyring format
+  ansible.builtin.shell: |
+    curl -fsSL https://packagecloud.io/tyk/tyk-gateway/gpgkey | gpg --dearmor -o /etc/apt/keyrings/tyk-gateway.gpg
+  args:
+    creates: /etc/apt/keyrings/tyk-gateway.gpg
+
+- name: Add Tyk Gateway APT repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/tyk-gateway.gpg] https://packagecloud.io/tyk/tyk-gateway/ubuntu/ focal main"
+    filename: "tyk_gateway"
+    state: present
+
+- name: Update APT cache
+  apt:
+    update_cache: yes
+
+- name: Install Tyk Gateway 5.7.1
+  apt:
+    name: "tyk-gateway=5.7.1"
+    state: present
+
+- name: Copy Tyk Gateway config
+  ansible.builtin.copy:
+    src: tyk.conf
+    dest: /opt/tyk-gateway/tyk.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Restart Tyk Gateway
+  ansible.builtin.systemd:
+    name: tyk-gateway
+    state: restarted
+    enabled: true

@@ -1,0 +1,8 @@
+- name: Install Tyk components
+  hosts: all
+  serial: 1
+  become: true
+  roles:
+    - dashboard
+    - gateway
+    - pump

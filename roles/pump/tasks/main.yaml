@@ -1,0 +1,49 @@
+- name: Ensure /etc/apt/keyrings directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Remove old Tyk Pump repo and key (if any)
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/sources.list.d/tyk_tyk-pump.list
+    - /etc/apt/sources.list.d/tyk-pump.list
+    - /etc/apt/keyrings/tyk-pump.gpg
+
+- name: Download Tyk Pump GPG key and convert to keyring format
+  ansible.builtin.shell: |
+    curl -fsSL https://packagecloud.io/tyk/tyk-pump/gpgkey | gpg --dearmor -o /etc/apt/keyrings/tyk-pump.gpg
+  args:
+    creates: /etc/apt/keyrings/tyk-pump.gpg
+
+- name: Add Tyk Pump APT repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/tyk-pump.gpg] https://packagecloud.io/tyk/tyk-pump/ubuntu/ focal main"
+    filename: "tyk_pump"
+    state: present
+
+- name: Update APT cache
+  apt:
+    update_cache: yes
+
+- name: Install Tyk Pump 1.11.1
+  apt:
+    name: "tyk-pump=1.11.1"
+    state: present
+
+- name: Copy Tyk Pump config
+  ansible.builtin.copy:
+    src: pump.conf
+    dest: /opt/tyk-pump/pump.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Restart Tyk Pump
+  ansible.builtin.systemd:
+    name: tyk-pump
+    state: restarted
+    enabled: true
