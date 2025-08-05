@@ -1,0 +1,51 @@
+- name: Ensure /etc/apt/keyrings directory exists
+  ansible.builtin.file:
+    path: /etc/apt/keyrings
+    state: directory
+    mode: '0755'
+
+- name: Remove old Tyk Portal repo and key (if any)
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: absent
+  loop:
+    - /etc/apt/sources.list.d/tyk_portal.list
+    - /etc/apt/sources.list.d/portal.list
+    - /etc/apt/keyrings/tyk-portal.gpg
+
+- name: Download Tyk Portal GPG key and convert to keyring format
+  ansible.builtin.shell: |
+    curl -fsSL https://packagecloud.io/tyk/portal/gpgkey | gpg --dearmor -o /etc/apt/keyrings/tyk-portal.gpg
+  args:
+    creates: /etc/apt/keyrings/tyk-portal.gpg
+
+- name: Add Tyk Portal APT repository
+  ansible.builtin.apt_repository:
+    repo: "deb [signed-by=/etc/apt/keyrings/tyk-portal.gpg] https://packagecloud.io/tyk/portal/ubuntu/ focal main"
+    filename: "tyk_portal"
+    state: present
+
+- name: Update APT cache
+  apt:
+    update_cache: yes
+
+- name: Install Tyk Developer Portal 1.14.0
+  apt:
+    name: "portal=1.14.0"
+    state: present
+    allow_downgrade: yes
+    force: yes
+
+- name: Copy Tyk Portal config
+  ansible.builtin.copy:
+    src: portal.conf
+    dest: /opt/portal/portal.conf
+    owner: root
+    group: root
+    mode: '0644'
+
+- name: Restart Tyk Portal
+  ansible.builtin.systemd:
+    name: portal
+    state: restarted
+    enabled: true
