@@ -3,6 +3,7 @@
 
 This repository provides an **Ansible-based automation** to deploy the **Tyk API Gateway**, **Tyk Dashboard**, **Tyk Pump**, and **Tyk Developer Portal** on **Ubuntu servers**.  
 It also supports integration with **PostgreSQL** and **Redis** for persistent storage.
+
 You will need to have dependencies deployed beforehand.
 
 ---
