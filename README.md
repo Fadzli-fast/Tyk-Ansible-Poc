@@ -80,7 +80,7 @@ Update `group_vars/all.yaml` with component versions and configuration details:
 ```yaml
 tyk_gateway_version: "5.8.1"
 tyk_dashboard_version: "5.8.1"
-tyk_pump_version: "1.8.0"
+tyk_pump_version: "1.11.1"
 tyk_portal_version: "1.14.0"
 ```
 
